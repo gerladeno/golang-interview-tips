@@ -251,7 +251,7 @@ for i := range randIntGenerator(20, 1000) {
 }
 ```
 
-    217, 454, 858, 295, 305, 822, 813, 786, 136, 683, 575, 19, 843, 259, 725, 186, 796, 190, 219, 780, 
+    614, 331, 935, 487, 464, 299, 324, 952, 463, 447, 469, 180, 210, 124, 725, 966, 271, 373, 740, 553, 
 
 
 ```go
@@ -358,24 +358,24 @@ for i := range results {
 }
 ```
 
-    worker 2 has done job 1 with result 3
-    3
+    worker 1 has done job 3 with result 9
     9
+    3
     6
     12
-    worker 2 has done job 4 with result 12
-    worker 2 has done job 5 with result 15
+    worker 1 has done job 4 with result 12
+    worker 0 has done job 1 with result 3
     15
-    worker 1 has done job 3 with result 9
-    worker 0 has done job 2 with result 6
-    worker 0 has done job 8 with result 24
-    24
-    27
-    18
-    21
+    worker 1 has done job 5 with result 15
+    worker 2 has done job 2 with result 6
     worker 1 has done job 7 with result 21
-    worker 0 has done job 9 with result 27
-    worker 2 has done job 6 with result 18
+    21
+    24
+    18
+    27
+    worker 2 has done job 8 with result 24
+    worker 1 has done job 9 with result 27
+    worker 0 has done job 6 with result 18
 
 
 
@@ -422,4 +422,43 @@ for i:=0; i < 20; i++ {
 wg.Wait()
 ```
 
-    4, 6, 2, 5, 3, 7, 12, 0, 17, 1, 19, 13, 18, 11, 14, 10, 8, 16, 15, 9, 
+    1, 9, 2, 7, 0, 10, 11, 12, 13, 14, 15, 16, 4, 17, 18, 8, 5, 6, 3, 19, 
+
+
+```go
+import (
+    "fmt"
+    "strconv"
+    "sync"
+)
+
+func main() {
+    var wg sync.WaitGroup
+    ch := make(chan string)
+    for i := 0; i < 5; i++ {
+        wg.Add(1)
+        go func(i int) {
+            defer wg.Done()
+            ch <- fmt.Sprintf("Goroutine %s", strconv.Itoa(i))
+        }(i)
+    }
+    go func() {
+        wg.Wait()
+        close(ch)
+    }()
+
+
+    {
+    FOR:
+        for {
+            select {
+            case q, ok := <-ch:
+                if !ok {
+                    break FOR
+                }
+                fmt.Println(q)
+            }
+        }
+    }
+}
+```
